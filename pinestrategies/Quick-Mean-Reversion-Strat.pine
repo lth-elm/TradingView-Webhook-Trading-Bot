@@ -1,0 +1,142 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © lth_elm
+
+//@version=4
+strategy("Mean reversion strategy", overlay=true, margin_long=100, margin_short=100)
+
+
+// ----- INPUTS -----
+
+
+// EMA
+ema_len = input(200, minval=1, title="EMA Length")
+ema = ema(close, ema_len)
+plot(ema, title="EMA", color=color.blue)
+
+// RSI
+rsi_len = input(14, minval=1, title="RSI Length")
+r = rsi(close, rsi_len)
+
+// ATR
+tp_sl_mul = input(false,  "──── TP/SL multiplicator")
+risk = input(title="Risk (%)", type=input.float, minval=0, defval=1)
+risk := risk/100
+atr_bars = input( title="ATR Bars", defval=14, minval=1)
+stop_mult = input(title=" ▪ Stoploss Multiplicator", type=input.float, defval=3)
+tp_mult = input(title=" ▪ Takeprofit Multiplicator", type=input.float, defval=5)
+tp1_mult = input(title=" ▪ TP1 Multiplicator", type=input.float, defval=0.75)
+tp2_mult = input(title=" ▪ TP2 Multiplicator", type=input.float, defval=1.5)
+tp_close = input(title="► TPx close (%)", type=input.float, defval=15)
+
+atr = atr(atr_bars)
+
+
+// ----- CONDITIONS -----
+
+
+bullishEng = open <= close[1] and close > open[1] and open[1] > close[1]
+bearishEng = open >= close[1] and close < open[1] and open[1] < close[1]
+
+goLong = bullishEng and close < ema and r[1] < 30
+goShort = bearishEng and close > ema and r[1] > 70
+
+
+// ------ GET IN/OUT A TRADE ------
+
+inLongPosition = strategy.position_size > 0
+inShortPosition = strategy.position_size < 0
+notInTrade = strategy.position_size == 0
+
+
+// ----- MANAGE TP/SL -----
+
+
+// For long
+float long_stop_level = na
+float long_profit_level = na
+long_stop_level := (goLong and notInTrade) ? close - atr * stop_mult : long_stop_level[1]
+long_profit_level := (goLong and notInTrade) ? close + atr * tp_mult : long_profit_level[1]
+
+// For short
+float short_stop_level = na
+float short_profit_level = na
+short_stop_level := (goShort and notInTrade) ? close + atr * stop_mult : short_stop_level[1]
+short_profit_level := (goShort and notInTrade) ? close - atr * tp_mult : short_profit_level[1]
+
+// Execute buy or sell order
+if goLong and notInTrade
+    size = (strategy.equity*risk) / abs(close-long_stop_level)
+    strategy.entry("long", strategy.long, qty=size, alert_message="entry")
+    // strategy.exit("exit", "long", stop=long_stop_level, limit=long_profit_level, alert_message="exit")
+    inLongPosition := true
+    notInTrade := false
+else if goShort and notInTrade
+    size = (strategy.equity*risk) / abs(close-short_stop_level)
+    strategy.entry("short", strategy.short, qty=size, when=notInTrade, alert_message="entry")
+    // strategy.exit("exit", "short", stop=short_stop_level, limit=short_profit_level, alert_message="exit")
+    inShortPosition := true
+    notInTrade := false
+
+
+// ----- MULTIPLE TP -----
+
+// Set multiple takeprofit and the stoploss
+ticksConversion(x) =>
+    strategy.position_size != 0 ? (x / syminfo.mintick) : float(na)
+
+long_sl = abs(strategy.position_avg_price-long_stop_level)
+long_tp = abs(strategy.position_avg_price-long_profit_level)
+long_tp1 = tp1_mult * long_sl
+long_tp2 = tp2_mult * long_sl
+if not notInTrade[1] and goLong[1]
+    strategy.exit("tp1", "long", qty_percent = tp_close, profit = ticksConversion(long_tp1), loss = ticksConversion(long_sl), alert_message="tp1_breakeven")
+    strategy.exit("tp2", "long", qty_percent = tp_close, profit = ticksConversion(long_tp2), loss = ticksConversion(long_sl), alert_message="tp2")
+    strategy.exit("exit", "long", qty_percent = 100, profit = ticksConversion(long_tp), loss = ticksConversion(long_sl), alert_message="exit")
+
+short_sl = abs(strategy.position_avg_price-short_stop_level)
+short_tp = abs(strategy.position_avg_price-short_profit_level)
+short_tp1 = tp1_mult * short_sl
+short_tp2 = tp2_mult * short_sl
+if not notInTrade[1] and goShort[1]
+    strategy.exit("tp1", "short", qty_percent = tp_close, profit = ticksConversion(short_tp1), loss = ticksConversion(short_sl), alert_message="tp1_breakeven")
+    strategy.exit("tp2", "short", qty_percent = tp_close, profit = ticksConversion(short_tp2), loss = ticksConversion(short_sl), alert_message="tp2")
+    strategy.exit("exit", "short", qty_percent = 100, profit = ticksConversion(short_tp), loss = ticksConversion(short_sl), alert_message="exit")
+
+// Exit or breakeven
+if inLongPosition
+    if close > ema // or we can keep our atr multiplicator first objective
+        strategy.close("long", alert_message="exit")
+    breakeven_level = strategy.position_avg_price + long_tp1 // change if breakeven tpx
+    if high > breakeven_level
+        breakstop = strategy.position_avg_price + 2 * (strategy.position_avg_price*0.001)
+        strategy.exit("exit", "long", qty_percent = 100, stop=breakstop, limit=long_profit_level, alert_message="exit")
+        strategy.exit("tp2", "long", qty_percent = tp_close, stop=breakstop, profit = ticksConversion(long_tp2), alert_message="tp2")
+if inShortPosition
+    if close < ema // or we can keep our atr multiplicator first objective
+        strategy.close("short", alert_message="exit")
+    breakeven_level = strategy.position_avg_price - short_tp1 // change if breakeven tpx
+    if low < breakeven_level
+        breakstop = strategy.position_avg_price - 2 * (strategy.position_avg_price*0.001)
+        strategy.exit("exit", "short", qty_percent = 100, stop=breakstop, limit=short_profit_level, alert_message="exit")
+        strategy.exit("tp2", "short", qty_percent = tp_close, stop=breakstop, profit = ticksConversion(short_tp2), alert_message="tp2")
+
+
+// ----- Plot TP/SL -----
+
+
+invisible = color.new(color.white, 100)
+p_price = plot(strategy.position_avg_price, color=invisible)
+p_long_stop = plot(strategy.position_size <= 0 ? na : long_stop_level, color=invisible, style=plot.style_linebr, linewidth=1)
+p_long_profit = plot(strategy.position_size <= 0 ? na : long_profit_level, color=invisible, style=plot.style_linebr, linewidth=1)
+p_short_stop = plot(strategy.position_size >= 0 ? na : short_stop_level, color=invisible, style=plot.style_linebr, linewidth=1)
+p_short_profit = plot(strategy.position_size >= 0 ? na : short_profit_level, color=invisible, style=plot.style_linebr, linewidth=1)
+
+fill(p_long_stop, p_price, color = inLongPosition ? color.red : na)
+fill(p_long_profit, p_price, color = inLongPosition ? color.green : na)
+fill(p_short_stop, p_price, color = inShortPosition ? color.red : na)
+fill(p_short_profit, p_price, color = inShortPosition ? color.green : na)
+
+
+
+
+

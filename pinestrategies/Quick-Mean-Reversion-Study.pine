@@ -1,0 +1,74 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © lth_elm
+
+//@version=4
+study(title="Mean reversion study", overlay=true)
+
+
+// ----- INPUTS -----
+
+
+// EMA
+ema_len = input(200, minval=1, title="EMA Length")
+ema = ema(close, ema_len)
+plot(ema, title="EMA", color=color.blue)
+
+// RSI
+rsi_len = input(14, minval=1, title="RSI Length")
+r = rsi(close, rsi_len)
+
+// ATR
+tp_sl_mul = input(false,  "──── TP/SL multiplicator")
+atr_bars = input( title="ATR Bars", defval=14, minval=1)
+stop_mult = input(title=" ▪ Stoploss Multiplicator", type=input.float, defval=3)
+tp_mult = input(title=" ▪ Takeprofit Multiplicator", type=input.float, defval=5)
+atr = atr(atr_bars)
+
+
+// ----- CONDITIONS -----
+
+
+bullishEng = open <= close[1] and close > open[1] and open[1] > close[1] and close < ema and r[1] < 30
+bearishEng = open >= close[1] and close < open[1] and open[1] < close[1] and close > ema and r[1] > 70
+
+plotshape(bullishEng, title="Crossover", location=location.belowbar, color=color.green, style=shape.triangleup, size=size.tiny)
+plotshape(bearishEng, title="Crossunder", location=location.abovebar, color=color.red, style=shape.triangledown, size=size.tiny)
+
+
+// ----- MANAGE TP/SL -----
+
+
+// For long
+long_stop_level = close - atr * stop_mult
+long_profit_level = close + atr * tp_mult
+
+// For short
+short_stop_level = close + atr * stop_mult
+short_profit_level = close - atr * tp_mult
+
+// Plot TP/SL
+
+plot(long_stop_level, color=color.red, style=plot.style_linebr, linewidth=1, title="Long SL", display=display.none)
+plot(long_profit_level, color=color.green, style=plot.style_linebr, linewidth=1, title="Long TP", display=display.none)
+plot(short_stop_level, color=color.red, style=plot.style_linebr, linewidth=1, title="Short SL", display=display.none)
+plot(short_profit_level, color=color.green, style=plot.style_linebr, linewidth=1, title="Short TP", display=display.none)
+
+plotshape(bullishEng ? long_stop_level : na, style=shape.xcross, color=color.red, location=location.absolute, size=size.tiny, offset=1)
+plotshape(bullishEng ? long_profit_level : na, style=shape.circle, color=color.green, location=location.absolute, size=size.tiny, offset=1)
+
+plotshape(bearishEng ? short_stop_level : na, style=shape.xcross, color=color.red, location=location.absolute, size=size.tiny, offset=1)
+plotshape(bearishEng ? short_profit_level : na, style=shape.circle, color=color.green, location=location.absolute, size=size.tiny, offset=1)
+
+
+// ----- ALERTS -----
+
+
+alertcondition(bullishEng, "MeanRev Long Alert",  '{"ticker": {{ticker}}, "exchange": {{exchange}}, "action": "buy", "type": "limit", "price": {{close}}, "message": "entry", "long SL": {{plot("Long SL")}}, "long TP": {{plot("Long TP")}}, "passphrase": "abcdefg", "subaccount": "Testing"}')
+alertcondition(bearishEng, "MeanRev Short Alert", '{"ticker": {{ticker}}, "exchange": {{exchange}}, "action": "sell", "type": "limit", "price": {{close}}, "message": "entry", "short SL": {{plot("Short SL")}}, "short TP": {{plot("Short TP")}}, "passphrase": "abcdefg", "subaccount": "Testing"}')
+
+
+
+
+
+
+
