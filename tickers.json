@@ -1,0 +1,8 @@
+{
+    "ftx": {
+        "BTCPERP": "BTC-PERP",
+        "ETHPERP": "ETH-PERP",
+        "FTTPERP": "FTT-PERP",
+        "BNBPERP": "BNB-PERP"
+    }
+}
