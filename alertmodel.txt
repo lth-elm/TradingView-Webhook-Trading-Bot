@@ -7,7 +7,7 @@
         "price" : {{strategy.order.price}},
         "message" : "{{strategy.order.alert_message}}", // entry, exit, ...breakeven
         "short SL" : {{plot("Short SL")}},
-        "short TP" : 0,
+        "short TP" : {{plot("Short TP")}},
         "long SL" : {{plot("Long SL")}},
         "long TP" : {{plot("Long TP")}},
         "passphrase" : "abcdefg",
