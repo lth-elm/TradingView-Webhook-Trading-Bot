@@ -11,6 +11,8 @@ In order to build that app I relied on two great videos to get started, implemen
 
 I won't go into full details so if you're a novice you might want to go through the videos first (at least the first one for the first part) but not necessary if you only want to take a grasp of what's happening here, otherwise if you already master even a bit of Flask, APIs, webhooks and TradingView pinescripts you can easily follow along.  ...?... (I will try to add more technical explanations over time or a glossary)
 
+___
+___
 
 Fist of all, to be able to use TradingView webhooks you will need to subscribe to the pro plan for approximately 12$ per month (a free month trial is available), and you can use my referral link to sign up so we all save 30$ when upgrading to a paid plan : https://www.tradingview.com/gopro/?share_your_love=lth_elm.
 
@@ -56,7 +58,7 @@ Now we can set the alert on TradingView. When you do that you will need to speci
     def tradingview_webhook():
 ```
 
-Then in 'Message' we write the **payload** in a **json** format so that python can read it and extract the information needed. In [alertmodel.txt](alertmodel.txt) there are multiples formats for alert messages and what results are generated from the **placeholders**, some includes datas for multiple take-profits : ```... "tp Close":{{plot("TP Close")}}, "tp1 Mult":{{plot("TP1 Mult")}}, ...``` ==> ```... "tp Close" : 20, "tp1 Mult" : 0.6, ...```. For a basic impletentation the whole payload whould look like this :
+Then in 'Message' we write the **payload** in a **json** format so that python can read it and extract the information needed. In [alertmodel.txt](alertmodel.txt) there are multiples formats for alert messages and what results are generated from the **placeholders**, some includes datas for multiple take-profits : ```... "tp Close" : {{plot("TP Close")}}, "tp1 Mult" : {{plot("TP1 Mult")}}, ...``` ==> ```... "tp Close" : 20, "tp1 Mult" : 0.6, ...```. For a basic impletentation the whole payload whould look like this :
 
 ```
 {
@@ -82,9 +84,140 @@ Then in 'Message' we write the **payload** in a **json** format so that python c
 
 We will now see how our app checks for the password along all the other implementations.
 ___
+___
 
-*FLASK APP*
+As we've said before we need to set a route that will receive **POST requests** and load the request data in a json format, so it will be : 
+
+```python
+from flask import request
+
+@app.route("/tradingview-to-webhook-order", methods=['POST'])
+    def tradingview_webhook():
+        data = json.loads(request.data)
+```
+
+Then we will need to compare the stored password with the one we received. So beforehand let's fetch it.
+
+```python
+webhook_passphrase_heroku = os.environ.get('WEBHOOK_PASSPHRASE')
+webhook_passphrase = webhook_passphrase_heroku if webhook_passphrase_heroku != None else config.WEBHOOK_PASSPHRASE
+```
+
+The main password is saved with the Heroku environment variables so we will try to get this one first, however if you are deploying the app locally it won't find it so you will need to write it in the [config.py](config.py) file, otherwise just set it to *None*.
+
+When that's done we can verify that the payload actually contains a password before check if it is the right one and finally calling the ```order()``` function from [orderapi.py](orderapi.py).
+
+```python
+import logbot
+
+if 'passphrase' not in data.keys():
+    logbot.logs(">>> /!\ No passphrase entered", True)
+    return {
+        "success": False,
+        "message": "no passphrase entered"
+    }
+
+if data['passphrase'] != webhook_passphrase:
+    logbot.logs(">>> /!\ Invalid passphrase", True)
+    return {
+        "success": False,
+        "message": "invalid passphrase"
+    }
+
+orders = order(data)
+return orders
+```
+
+___
+
+The **orderapi** python file contains the global variables that we will get : **subaccount** to use, **leverage** to use (or not), maximum **risk per trade** (in %), the **api key** and **api secret**. To retrieve them the concept is the same as with the password except that these values will depend according to the subaccount you are using, therefore right at the beginning of the ```order()``` function we will call ```global_var()``` that will get from the payload the subaccount name and set the values accordingly.
+
+```python
+import os, config
+
+subaccount_name = payload['subaccount']
+if subaccount_name == 'Testing':
+    risk_heroku = os.environ.get('RISK_TESTING')
+    risk = risk_heroku if risk_heroku != None else config.RISK_TESTING
+    risk = float(risk) / 100
+    # ...
+elif subaccount_name == 'STRATEGY_TWO':
+    # ...
+```
+
+In accordance with the **exchange** used in the TradingView strategy ```exchange_api``` will take its class, for now only only the **FTX** have been integrated.
+
+```python
+from ftxapi import Ftx
+#   SET EXCHANGE CLASS
+exchange_api = None
+try:
+    if exchange == 'FTX':
+        exchange_api = Ftx(init_var)
+    elif exchange == 'An other exchange name'
+    # ...
+```
+
+You need to know that the **tickers** names in the exchanges and the ones in TradingView might be different, for instance in tradingview the ticker for the BTC/USD future contract of the FTX exchange is *BTCPERP* while in the FTX app it is *BTC-PERP*. So for that we have created a json file ([tickers.json](tickers.json)) that indexes for every exchange its tradingview ticker with its original one.
+
+```json
+{
+    "ftx": {
+        "BTCPERP": "BTC-PERP",
+        "ETHPERP": "ETH-PERP",
+        "FTTPERP": "FTT-PERP",
+        "BNBPERP": "BNB-PERP"
+    }
+}
+```
+And the python code :
+```python
+#   FIND THE APPROPRIATE TICKER IN DICTIONNARY
+ticker = ""
+with open('tickers.json') as json_file:
+    tickers = json.load(json_file)
+    try:
+        ticker = tickers[exchange.lower()][payload['ticker']]
+```
+
+Finally one important step before making any post request to our exchange is to know what the alert we received was for. This information is contained in the **'message'** key of our payload, remember when we wrote and *'alert_message'* that we used as a placeholder in our pinescript and alert message ? Well it's that one and the message can be of 3 types : ```entry```, ```exit``` and ```xxx_breakeven``` (as long as it finishes with breakeven) and we ignore any other message for information only such as *tp[n]*.
+
+According to the message we will call the appropriate exchange class method.
+
+```python
+import logbot
+#   ALERT MESSAGE CONDITIONS
+if payload['message'] == 'entry':
+    logbot.logs(">>> Order message : 'entry'")
+    exchange_api.exit_position(ticker)
+    orders = exchange_api.entry_position(payload, ticker)
+    return orders
+
+elif payload['message'] == 'exit':
+    logbot.logs(">>> Order message : 'exit'")
+    exit_res = exchange_api.exit_position(ticker)
+    return exit_res
+
+elif payload['message'][-9:] == 'breakeven':
+    logbot.logs(">>> Order message : 'breakeven'")
+    breakeven_res = exchange_api.breakeven(payload, ticker)
+    return breakeven_res
+```
+
+___
+
+*EXPLAIN [ftxapi.py](ftxapi.py)*
+___
+___
+
+*DISCORD LOGS*
+
+___
+___
 
 *DISCORD BOT*
+
+___
+___
 
 *At the end all referral links for website used*
