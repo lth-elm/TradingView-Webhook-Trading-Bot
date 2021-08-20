@@ -1,5 +1,5 @@
 import logbot
-import json, os, config, requests
+import json, os, config
 from flask import Flask, request
 from orderapi import order
 
