@@ -1,21 +1,33 @@
-**Rough version...**
+1. [Presentation](#presentation)
+2. [TradingView](#tradingview)
+    1. [Pinescript Strategy](#pinescriptstrategy)
+    2. [Pinescript Alerts](#pinescriptalerts)
+3. [The Trading Bot](#tradingbot)
+    1. [Main app, Routes and Password](#routespassword)
+    2. [Order Initialization](#orderinit)
+        1. [Global variables](#globalvariables)
+        2. [Exchange and tickers](#exchangetickers)
+        3. [Action : Enter, Exit or Breakeven a trade](#action)
+    3. [Exchange API *(coming)*](#exchangeapi)
+4. [Discord Logs *(coming)*](#discordlogs)
+5. [Discord Trading Bot *(coming)*](#discordtradingbot)
+6. [Links *(coming)*](#links)
+
+
+# Presentation <a name="presentation"></a>
 
 *Flask app receiving alerts from TradingView and automatically sends a POST order to an integrated exchange API such as FTX (Binance and ByBit to come). Can also deliver the alert and the chart to discord where you can decide whether or not to take that trade through a Discord bot.*
 
-
-*TABLE OF CONTENT*
-
-
 In order to build that app I relied on two great videos to get started, implementing and deploying basics stuff, I then enhanced it all for my own use. This one from Part Time Larry https://www.youtube.com/watch?v=XPTb3adEQEE (his [github](https://github.com/hackingthemarkets)) and this one for the discord bot from freeCodeCamp.org : https://www.youtube.com/watch?v=SPTfmiYiuok.
 
+I won't go into full details so if you're a novice you might want to go through the videos first (at least the first one for the first part) but not necessary if you only want to take a grasp of what's happening here, otherwise if you already master even a bit of Flask, APIs, webhooks and TradingView pinescripts you can easily follow along (I will try to add more technical explanations over time or a glossary).
 
-I won't go into full details so if you're a novice you might want to go through the videos first (at least the first one for the first part) but not necessary if you only want to take a grasp of what's happening here, otherwise if you already master even a bit of Flask, APIs, webhooks and TradingView pinescripts you can easily follow along.  ...?... (I will try to add more technical explanations over time or a glossary)
 
-___
-___
+# TradingView <a name="tradingview"></a>
 
 Fist of all, to be able to use TradingView webhooks you will need to subscribe to the pro plan for approximately 12$ per month (a free month trial is available), and you can use my referral link to sign up so we all save 30$ when upgrading to a paid plan : https://www.tradingview.com/gopro/?share_your_love=lth_elm.
 
+## Pinescript Strategy <a name="pinescriptstrategy"></a>
 
 Now that this is done we can get down to business. We will need to write a pinescript strategy that will be for our example focused on **mean reversions** : if we are above/under the 200 period EMA, RSI is overbought/oversold and we have a bearish/bullish engulfing candle we will either short or long the position trying to come back to the 200 period exponential moving average. For ease of use the stop-losses and take-profits are placed using "random" values of ATR.
 
@@ -45,7 +57,8 @@ And delete all the *multiple TP* category.
 // ----- MULTIPLE TP -----
 // ...
 ```
-___
+
+## Pinescript Alerts <a name="pinescriptalerts"></a>
 
 When deciding to take, close or exit a position with **strategy.*entry/close/exit*()** you must specify an **'alert_message'** that can only be one of those : ```entry``` | ```exit``` for the minimal basic strategy, ```tp[n]``` if you've set multiple take profit level and finally ```xxx_breakeven``` anything can be written before the letter 'b' this is just for when this alert is triggered the bot will set a new stop-loss at breakeven level (+ a few % to save comission fees).
 
@@ -83,8 +96,11 @@ Then in 'Message' we write the **payload** in a **json** format so that python c
 * And finally the passphrase is required since anybody can send a post request to your webhook url so you want to make sure to take into account only those coming from your TradingView alerts.
 
 We will now see how our app checks for the password along all the other implementations.
-___
-___
+
+
+# The Trading Bot <a name="tradingbot"></a>
+
+## Main app, Routes and Password <a name="routespassword"></a>
 
 As we've said before we need to set a route that will receive **POST requests** and load the request data in a json format, so it will be : 
 
@@ -128,7 +144,9 @@ orders = order(data)
 return orders
 ```
 
-___
+## Order Initialization <a name="orderinit"></a>
+
+### Global variables <a name="globalvariables"></a>
 
 The **orderapi** python file contains the global variables that we will get : **subaccount** to use, **leverage** to use (or not), maximum **risk per trade** (in %), the **api key** and **api secret**. To retrieve them the concept is the same as with the password except that these values will depend according to the subaccount you are using, therefore right at the beginning of the ```order()``` function we will call ```global_var()``` that will get from the payload the subaccount name and set the values accordingly.
 
@@ -144,6 +162,8 @@ if subaccount_name == 'Testing':
 elif subaccount_name == 'STRATEGY_TWO':
     # ...
 ```
+
+### Exchange and tickers <a name="exchangetickers"></a>
 
 In accordance with the **exchange** used in the TradingView strategy ```exchange_api``` will take its class, for now only only the **FTX** have been integrated.
 
@@ -180,6 +200,8 @@ with open('tickers.json') as json_file:
         ticker = tickers[exchange.lower()][payload['ticker']]
 ```
 
+### Action : Enter, Exit or Breakeven a trade <a name="action"></a>
+
 Finally one important step before making any post request to our exchange is to know what the alert we received was for. This information is contained in the **'message'** key of our payload, remember when we wrote and *'alert_message'* that we used as a placeholder in our pinescript and alert message ? Well it's that one and the message can be of 3 types : ```entry```, ```exit``` and ```xxx_breakeven``` (as long as it finishes with breakeven) and we ignore any other message for information only such as *tp[n]*.
 
 According to the message we will call the appropriate exchange class method.
@@ -204,20 +226,15 @@ elif payload['message'][-9:] == 'breakeven':
     return breakeven_res
 ```
 
-___
+## Exchange API <a name="exchangeapi"></a>
 
-*EXPLAIN [ftxapi.py](ftxapi.py)*
-___
-___
+*[ftxapi.py](ftxapi.py)*
 
-*DISCORD LOGS*
 
-___
-___
+# Discord Logs <a name="discordlogs"></a>
 
-*DISCORD BOT*
 
-___
-___
+# Discord Trading Bot <a name="discordtradingbot"></a>
 
-*At the end all referral links for website used*
+
+# Links <a name="links"></a>
