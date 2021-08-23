@@ -8,7 +8,8 @@
         1. [Global variables](#globalvariables)
         2. [Exchange and tickers](#exchangetickers)
         3. [Action : Enter, Exit or Breakeven a trade](#action)
-    3. [Exchange API *(coming)*](#exchangeapi)
+    3. [Exchange API](#exchangeapi)
+        1. [Trade orders and Payloads](#orderspayloads)
 4. [Discord Logs *(coming)*](#discordlogs)
 5. [Discord Trading Bot *(coming)*](#discordtradingbot)
 6. [Links *(coming)*](#links)
@@ -228,7 +229,58 @@ elif payload['message'][-9:] == 'breakeven':
 
 ## Exchange API <a name="exchangeapi"></a>
 
-*[ftxapi.py](ftxapi.py)*
+For this part you'll need to sign up to any exchanges for which the api is integrated and retrieve your private and secret keys. The integration of an exchange api is done by creating a new class on a new file, in this case we will use FTX so for that we have create the file [ftxapi.py](ftxapi.py).
+
+First we initialize the **instances** of the **class** by passing it the previous variables (*subaccount, risk per trade...*) and initiate the REST endpoint URL.
+
+```python
+from requests import Request, Session, Response
+
+class Ftx:
+    def __init__(self, var: dict):
+        self.ENDPOINT = 'https://ftx.com/api/'
+        self.session = Session()
+
+        self.subaccount_name = var['subaccount_name']
+        self.leverage = var['leverage']
+        self.risk = var['risk']
+        self.api_key = var['api_key']
+        self.api_secret = var['api_secret']
+```
+
+The methods unders '*SIGN, POST AND REQUEST*' are obviously for authentication and POST and GET requests. The authentification technique is given by FTX, you can find it here alongside the rest of the **API documentation : https://docs.ftx.com/?python#authentication**
+
+### Trade orders and Payloads <a name="orderspayloads"></a>
+
+Now under '*ORDER FUNCTION*' are written the 3 method class for **entering**, **exiting** a position and even a method that has the ability of moving a stop loss to **breakeven**.
+
+The structure is essentially all the same for the three, we define with variables the **action** (buy or sell), what **quantity** (size), at what **price**, where to place the **tp** and **sl** and we regroup them all in a different dictionnary payloads. Depending on the request we need to specify or not somes values so you need to check what is expected for a specific request in the documention.
+
+*Ok let's suppose that our bot is about to enter in a position, for safety it will first place the stop loss and this is how we code that :*
+
+```python
+sl_payload = {
+    "market": ticker,
+    "side": close_sl_tp_side,
+    "triggerPrice": stop_loss,
+    "size": size,
+    "type": "stop",
+    "reduceOnly": True,
+    "retryUntilFilled": True
+}
+r = self._try_request('POST', 'conditional_orders', sl_payload)
+if not r['success']:
+    return r
+orders.append(r['result'])
+```
+
+*How can we know that the payload has to be written like that and that the we want to post to the url 'ENDPOINT/conditional_orders' ? Well simply by looking over the documentation :*
+
+![FTX API Documentation StopLoss](./README_images/FtxApiDocStopLoss.PNG "FTX API Documentation StopLoss")
+
+*https://docs.ftx.com/?python#place-trigger-order*
+
+By scrolling down the file you can quickly have an idea of all the things that are possible (posting limit orders, multiple take profits etc...). From and exchange class to another you'll probably need to change in these three methods the payloads'keys and values, the urls and how you access a value from a json you've retrieved.
 
 
 # Discord Logs <a name="discordlogs"></a>
