@@ -10,14 +10,18 @@
         3. [Action : Enter, Exit or Breakeven a trade](#action)
     3. [Exchange API](#exchangeapi)
         1. [Trade orders and Payloads](#orderspayloads)
-4. [Discord Logs *(coming)*](#discordlogs)
+4. [Discord Logs](#discordlogs)
 5. [Discord Trading Bot *(coming)*](#discordtradingbot)
 6. [Links *(coming)*](#links)
+
+*If you ever decide to sign up to any of the application please use one of my link as we both benefit from it, thank you.*
+
+Also, ff anything to be improved please ...
 
 
 # Presentation <a name="presentation"></a>
 
-*Flask app receiving alerts from TradingView and automatically sends a POST order to an integrated exchange API such as FTX (Binance and ByBit to come). Can also deliver the alert and the chart to discord where you can decide whether or not to take that trade through a Discord bot.*
+**A Flask app receiving alerts from TradingView and automatically sends a POST order to an integrated exchange API such as FTX (Binance and ByBit to come). Can also deliver the alert and the chart to discord where you can decide whether or not to take that trade through a Discord bot.**
 
 In order to build that app I relied on two great videos to get started, implementing and deploying basics stuff, I then enhanced it all for my own use. This one from Part Time Larry https://www.youtube.com/watch?v=XPTb3adEQEE (his [github](https://github.com/hackingthemarkets)) and this one for the discord bot from freeCodeCamp.org : https://www.youtube.com/watch?v=SPTfmiYiuok.
 
@@ -285,8 +289,64 @@ By scrolling down the file you can quickly have an idea of all the things that a
 
 # Discord Logs <a name="discordlogs"></a>
 
+You must have notice in some part of the code lines similare to these ones :
+
+```python
+import logbot
+
+logbot.logs(">>> Order message : 'entry'")
+# or
+logbot.logs(">>> /!\ Invalid passphrase", True)
+```
+
+This ```logs()``` function from [logbot.py](logbot.py) act as a console **log printer** but also sends the logs to a discord channel you've specified so that you can easily at any time **track your bot's actions**.
+
+![Discord Logs Channel](./README_images/DiscordLogs.PNG "Discord Logs Channel")
+
+You can create another channel for **error logs** where you would set notifications to high priority so that you will be quickly aware if anything goes wrong.
+
+![Discord Error Logs Channel](./README_images/DiscordErrorLogs.PNG "Discord Error Logs Channel")
+
+To do that it's pretty simple, you'll have to send a json post request to the discord webhook *(Discord server settings / Integrations / Webhooks / New webhooks)* which must contain a username, a content and optionally an avatar. If an error has occured you just set the *error* variable to *true* and the message is also send to the error channel.
+
+```python
+import requests
+
+DISCORD_ERR_URL = "https://discord.com/api/webhooks/xxxxx"
+DISCORD_LOGS_URL = "https://discord.com/api/webhooks/xxxxx"
+logs_format = {
+	"username": "logs",
+	"avatar_url": "https://imgr.search.brave.com/ZYUP1jUoQ5tr1bxChZtL_sJ0LHz7mDhlhkLHxWxhnPM/fit/680/680/no/1/aHR0cHM6Ly9jbGlw/Z3JvdW5kLmNvbS9p/bWFnZXMvZGlzY29y/ZC1ib3QtbG9nby00/LnBuZw",
+	"content": ""
+}
+
+def logs(message, error=False):
+    print(message)
+    try:
+        json_logs = logs_format
+        json_logs['content'] = message
+        requests.post(DISCORD_LOGS_URL, json=json_logs)
+        if error:
+            requests.post(DISCORD_ERR_URL, json=json_logs)
+    except:
+        pass
+```
 
 # Discord Trading Bot <a name="discordtradingbot"></a>
 
 
 # Links <a name="links"></a>
+
+* TradingView :
+
+https://www.tradingview.com/gopro/?share_your_love=lth_elm for both saving 30$ when upgrading to a paid plan.
+
+* FTX :
+
+https://ftx.com/#a=26368756 and you receive a 5,00 % fee discount on all your trades.
+
+* Binance and Binance future:
+
+https://accounts.binance.com/en/register?ref=MJB86NYU to save 10% comission fee.
+
+https://www.binance.com/en/futures/ref/154947021 for binance future and to also save 10%.
