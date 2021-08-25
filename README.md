@@ -12,11 +12,11 @@
         1. [Trade orders and Payloads](#orderspayloads)
 4. [Discord Logs](#discordlogs)
 5. [Discord Trading Bot *(coming)*](#discordtradingbot)
-6. [Links *(coming)*](#links)
+6. [Links](#links)
 
 *If you ever decide to sign up to any of the application please use one of my link as we both benefit from it, thank you.*
 
-Also, ff anything to be improved please ...
+Also, if you ever notice something that can be improved or corrected or even add a completely new dimension please de not hesitate to **pull request**.
 
 
 # Presentation <a name="presentation"></a>
