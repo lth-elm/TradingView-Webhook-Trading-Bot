@@ -363,21 +363,21 @@ The TradingView alert contains the **link** toward the chart and a **prepared pa
 
 ![Mean Reversion Divergence](./README_images/MRDivergence.png "Mean Reversion Divergence")
 
-*You see that if we have taken that trade we would have lost.* 
+*You see that if we have taken the first two trades we would have lost.* 
 
 As you can see price makes **higher highs** while RSI is making **lower highs** (the white line has been manually placed for illustration). An RSI divergence demonstrate that the price is losing its momentum and the trend is slowing down, this can be a "perfect" reversal signal for our mean reversion strategy.
 
-Let's see how the other two react for this one.
+Let's see how the other two react to this one.
 
 ![Discord chat second alert](./README_images/DiscordChatTwo.PNG "Discord chat second alert")
 
-Here after a simple command ```!payload ``` *Yud_4* was able to place the order after making a small modification to the market type (*limit* -> *market*). He then received a confirmattion through the bot that everything went accordingly, should an error occur he would also be aware of that and could check the error logs for more information.
+Here after a simple command ```!payload``` *Yud_4* was able to place the order after making a small modification to the market type (*limit* -> *market*). He then received a **confirmattion** through the bot that everything went accordingly, should an error occur he would also be aware of that and could check the error logs for more information.
 
 Finally they did well selecting that trade as it was a winner.
 
 ![Mean Reversion Divergence Winner](./README_images/MRDivergenceWin.png "Mean Reversion Divergence Winner")
 
-*\* This conversion example has been set up since the alerts occured in the past when this was done.* 
+*\* This conversation example has been set up since the alerts occured in the past when this was done.* 
 
 ## Code Review *(Incoming)* <a name="codereview"></a>
 
