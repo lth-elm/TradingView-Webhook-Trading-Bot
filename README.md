@@ -11,8 +11,12 @@
     3. [Exchange API](#exchangeapi)
         1. [Trade orders and Payloads](#orderspayloads)
 4. [Discord Logs](#discordlogs)
-5. [Discord Trading Bot *(coming)*](#discordtradingbot)
+5. [Discord Trading Bot](#discordtradingbot)
+    1. [Quick explanation](#quickexplanation)
+    2. [Concrete example](#concreteexample)
+    3. [Code Review *(Incoming)*](#codereview)
 6. [Links](#links)
+
 
 *If you ever decide to sign up to any of the application please use one of my link as we both benefit from it, thank you.*
 
@@ -332,7 +336,58 @@ def logs(message, error=False):
         pass
 ```
 
+
 # Discord Trading Bot <a name="discordtradingbot"></a>
+
+## Quick explanation <a name="quickexplanation"></a>
+
+This is the most interesting part of the project, the idea behind it is instead of having a TradingView alert triggering our bot and automatically placing an order **the alert will instead be sent to a Discord channel with a url link to the chart** (ideally we would directly sent the chart image if any of you has an idea about how to do that) so that you can **visualize it first** and by **writting a specific line** in this discord channel you can accept to **place that order** and even **bring some modifications** to it. 
+
+Let's have a concrete example !
+
+## Concrete example <a name="concreteexample"></a>
+
+Okay so for this example remember when I said [here](#pinescriptstrategy) that this strategy is far from being perfect but it **can be improved if we add our own reasoning to it** ? Well indeed you can **filter the trades** and add more weight to your decisions if a **regular divergence** occurs for example, however many mistakes can happen if you try to code it so it might be better if you analyse it by yourself.
+
+At some point the chart looked like this with an alert triggered.
+
+![Mean Reversion first Alert](./README_images/MeanReversionLosses.png "Mean Reversion first Alert")
+
+The chart url will thereby be sent to the discord channel so that everyone can debate (ideally directly send an image instead of a link).
+
+![Discord chat first alert](./README_images/DiscordChatOne.PNG "Discord chat first alert")
+
+The TradingView alert contains the **link** toward the chart and a **prepared payload** anyone can just copy-paste to place an order and may modify it a bit.
+
+*Kakkkashi* feels good about this trade but *Yud_4* suggest him to wait another alert and see if they can notice a **divergence in the RSI** (Relative Strength Index) and actually after a little while we have one :
+
+![Mean Reversion Divergence](./README_images/MRDivergence.png "Mean Reversion Divergence")
+
+*You see that if we have taken that trade we would have lost.* 
+
+As you can see price makes **higher highs** while RSI is making **lower highs** (the white line has been manually placed for illustration). An RSI divergence demonstrate that the price is losing its momentum and the trend is slowing down, this can be a "perfect" reversal signal for our mean reversion strategy.
+
+Let's see how the other two react for this one.
+
+![Discord chat second alert](./README_images/DiscordChatTwo.PNG "Discord chat second alert")
+
+Here after a simple command ```!payload ``` *Yud_4* was able to place the order after making a small modification to the market type (*limit* -> *market*). He then received a confirmattion through the bot that everything went accordingly, should an error occur he would also be aware of that and could check the error logs for more information.
+
+Finally they did well selecting that trade as it was a winner.
+
+![Mean Reversion Divergence Winner](./README_images/MRDivergenceWin.png "Mean Reversion Divergence Winner")
+
+*\* This conversion example has been set up since the alerts occured in the past when this was done.* 
+
+## Code Review *(Incoming)* <a name="codereview"></a>
+
+...
+
+You will still need to set an alert though so that you won't need to look at the chart everytime, however the [strategy script](pinestrategies/Quick-Mean-Reversion-Strat.pine) need to be converted to a study one in pinescript and here is how it look like after conversion : [Quick-Mean-Reversion-Study.pine](pinestrategies/Quick-Mean-Reversion-Study.pine)
+
+\+ Alertmodel
+
+...
 
 
 # Links <a name="links"></a>
