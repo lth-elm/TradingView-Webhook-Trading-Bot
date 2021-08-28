@@ -14,7 +14,7 @@
 5. [Discord Trading Bot](#discordtradingbot)
     1. [Quick explanation](#quickexplanation)
     2. [Concrete example](#concreteexample)
-    3. [Code Review *(Incoming)*](#codereview)
+    3. [Code Review](#codereview)
 6. [Links](#links)
 
 
@@ -73,11 +73,11 @@ When deciding to take, close or exit a position with **strategy.*entry/close/exi
 
 ___
 
-Now we can set the alert on TradingView. When you do that you will need to specify the Webhook URL that would be https://the-link-of-your-flask-app.com/your-route, "your-route" would be "tradingview-to-webhook-order" in our example ([app.py](app.py)).
+Now we can set the alert on TradingView. When you do that you will need to specify the **Webhook URL** that would be https://the-link-of-your-flask-app.com/your-route, "your-route" would be "tradingview-to-webhook-order" in our example ([app.py](app.py)).
 
 ```python
 @app.route("/tradingview-to-webhook-order", methods=['POST'])
-    def tradingview_webhook():
+def tradingview_webhook():
 ```
 
 Then in 'Message' we write the **payload** in a **json** format so that python can read it and extract the information needed. In [alertmodel.txt](alertmodel.txt) there are multiples formats for alert messages and what results are generated from the **placeholders**, some includes datas for multiple take-profits : ```... "tp Close" : {{plot("TP Close")}}, "tp1 Mult" : {{plot("TP1 Mult")}}, ...``` ==> ```... "tp Close" : 20, "tp1 Mult" : 0.6, ...```. For a basic impletentation the whole payload whould look like this :
@@ -379,15 +379,101 @@ Finally they did well selecting that trade as it was a winner.
 
 *\* This conversation example has been set up since the alerts occured in the past when this was done.* 
 
-## Code Review *(Incoming)* <a name="codereview"></a>
+## Code Review <a name="codereview"></a>
 
-...
+For this part I got my inspiration from this [video](https://www.youtube.com/watch?v=SPTfmiYiuok) it explain pretty well how to create the bot from the Discord developer portal and get and use its token but also how to keep the bot running by ping it every 5 minute so that it doesn't enter in sleep mode.
 
-You will still need to set an alert though so that you won't need to look at the chart everytime, however the [strategy script](pinestrategies/Quick-Mean-Reversion-Strat.pine) need to be converted to a study one in pinescript and here is how it look like after conversion : [Quick-Mean-Reversion-Study.pine](pinestrategies/Quick-Mean-Reversion-Study.pine)
+___
 
-\+ Alertmodel
+You will still need to set a tradingview alert so that you won't need to look at the chart everytime, however the [strategy script](pinestrategies/Quick-Mean-Reversion-Strat.pine) need to be converted to a **study** one in pinescript and here is how it look like after conversion : [Quick-Mean-Reversion-Study.pine](pinestrategies/Quick-Mean-Reversion-Study.pine)
 
-...
+The alert message needs to be modified a bit, here is how it will look like if set for a long position (buy) :
+
+```
+{
+    "ticker": {{ticker}}, 
+    "exchange": {{exchange}}, 
+    "action": "buy", 
+    "type": "limit", 
+    "price": {{close}}, 
+    "message": "entry", 
+    "long SL": {{plot("Long SL")}}, 
+    "long TP": {{plot("Long TP")}}, 
+    "passphrase": "abcdefg", 
+    "subaccount": "Testing",
+    "chart_url" : "https://www.tradingview.com/chart/jbSLq0oe"
+}
+```
+*[alertmodel.txt](alertmodel.txt)*
+
+As you can see it's very much similar to the first payload but we've also added the **chart url** so that it can directly be sent in the discord channel along the other parameters.
+
+The webhook url also need to be changed to https://the-link-of-your-flask-app.com/tradingview-to-discord-study since this is how it is set the [app.py](app.py).
+
+```python
+@app.route("/tradingview-to-discord-study", methods=['POST'])
+def discord_study_tv():
+```
+
+___
+
+This lattest route works almost exactly as the first one except instead of calling the *order* function to place an order it will call ```study_alert()``` from [logbot.py](logbot.py). Like  ```logs()``` *study_alert(json.dumps(data), chart_url)* send messages to a specified discord channel including the payload and the chart url.
+
+```python
+import requests
+
+DISCORD_STUDY_URL = "https://discord.com/api/webhooks/xxxxx"
+study_format = {
+	"username": "Tradingview Alert",
+	"avatar_url": "https://pbs.twimg.com/profile_images/1418656582888525833/p4fZd3KR_400x400.jpg",
+	"content": ""
+}
+
+def study_alert(message, chart_url):
+    try:
+        json_logs = study_format
+        json_logs['content'] = ">>> " + message + " \n\n" + chart_url
+        requests.post(DISCORD_STUDY_URL, json=json_logs)
+    except:
+        pass
+```
+
+___
+
+The discord bot files is not hosted on Heroku but instead [Repl.it](https://replit.com/) however you can still find them [here](discord_bot/discord_main.py) under ./discord_bot/.
+
+Our discord bot will read every message sent to the chat and if one start with ```!payload``` it will **load what comes next** as a **json** and add to it the **webhook passphrase** needed by our app for which it will send a post request including the payload.
+
+```python
+import discord, requests, json, os
+
+WEBHOOK_URL = os.environ['WEBHOOK_URL']
+WEBHOOK_PASSPHRASE = os.environ['WEBHOOK_PASSPHRASE']
+
+client = discord.Client()
+
+@client.event
+async def on_message(message):
+  if message.author == client.user:
+    return
+
+  msg = message.content
+
+  if msg.startswith('!payload '):
+    data = json.loads(msg[len('!payload '):])
+    data['passphrase'] = WEBHOOK_PASSPHRASE
+    await message.channel.send('Payload received, now processing...')
+    success = post_tradingview-webhook(json.dumps(data))
+
+    if success:
+      await message.channel.send(':white_check_mark: Order posted with success !')
+    else:
+      await message.channel.send(':x: An error must have occured, please check the logs for more information...')   
+
+client.run(ORDER_BOT_TOKEN)
+```
+
+That same bot that received the payload will sent intermediary messages to the discord channel to **inform the user about the progression** and result : order posted with success or error.
 
 
 # Links <a name="links"></a>
