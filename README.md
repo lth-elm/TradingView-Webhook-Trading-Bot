@@ -408,7 +408,7 @@ The alert message needs to be modified a bit, here is how it will look like if s
 
 As you can see it's very much similar to the first payload but we've also added the **chart url** so that it can directly be sent in the discord channel along the other parameters.
 
-The webhook url also need to be changed to https://the-link-of-your-flask-app.com/tradingview-to-discord-study since this is how it is set the [app.py](app.py).
+The webhook url also need to be changed to https://the-link-of-your-flask-app.com/tradingview-to-discord-study since this is how it is set in [app.py](app.py).
 
 ```python
 @app.route("/tradingview-to-discord-study", methods=['POST'])
@@ -417,7 +417,7 @@ def discord_study_tv():
 
 ___
 
-This lattest route works almost exactly as the first one except instead of calling the *order* function to place an order it will call ```study_alert()``` from [logbot.py](logbot.py). Like  ```logs()``` *study_alert(json.dumps(data), chart_url)* send messages to a specified discord channel including the payload and the chart url.
+This lattest route works almost exactly as the first one except instead of calling the *order* function to place an order it will call ```study_alert()``` from [logbot.py](logbot.py). Like  ```logs()``` *```study_alert(json.dumps(data), chart_url)```* send messages to a specified discord channel including the payload and the chart url.
 
 ```python
 import requests
@@ -437,6 +437,8 @@ def study_alert(message, chart_url):
     except:
         pass
 ```
+
+![Discord tradingview alert](./README_images/DiscordTVAlert.PNG "Discord tradingview alert")
 
 ___
 
