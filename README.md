@@ -22,8 +22,6 @@
 
 Also, if you ever notice something that can be improved or corrected or even add a completely new dimension please de not hesitate to **pull request**.
 
-&nbsp;
-
 
 # Presentation <a name="presentation"></a>
 
