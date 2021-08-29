@@ -15,12 +15,14 @@
     1. [Quick explanation](#quickexplanation)
     2. [Concrete example](#concreteexample)
     3. [Code Review](#codereview)
-6. [Links](#links)
+6. [Links and Addresses](#linksaddresses)
 
 
 *If you ever decide to sign up to any of the application please use one of my link as we both benefit from it, thank you.*
 
 Also, if you ever notice something that can be improved or corrected or even add a completely new dimension please de not hesitate to **pull request**.
+
+&nbsp;
 
 
 # Presentation <a name="presentation"></a>
@@ -30,6 +32,8 @@ Also, if you ever notice something that can be improved or corrected or even add
 In order to build that app I relied on two great videos to get started, implementing and deploying basics stuff, I then enhanced it all for my own use. This one from Part Time Larry https://www.youtube.com/watch?v=XPTb3adEQEE (his [github](https://github.com/hackingthemarkets)) and this one for the discord bot from freeCodeCamp.org : https://www.youtube.com/watch?v=SPTfmiYiuok.
 
 I won't go into full details so if you're a novice you might want to go through the videos first (at least the first one for the first part) but not necessary if you only want to take a grasp of what's happening here, otherwise if you already master even a bit of Flask, APIs, webhooks and TradingView pinescripts you can easily follow along (I will try to add more technical explanations over time or a glossary).
+
+&nbsp;
 
 
 # TradingView <a name="tradingview"></a>
@@ -105,6 +109,8 @@ Then in 'Message' we write the **payload** in a **json** format so that python c
 * And finally the passphrase is required since anybody can send a post request to your webhook url so you want to make sure to take into account only those coming from your TradingView alerts.
 
 We will now see how our app checks for the password along all the other implementations.
+
+&nbsp;
 
 
 # The Trading Bot <a name="tradingbot"></a>
@@ -290,6 +296,8 @@ orders.append(r['result'])
 
 By scrolling down the file you can quickly have an idea of all the things that are possible (posting limit orders, multiple take profits etc...). From and exchange class to another you'll probably need to change in these three methods the payloads'keys and values, the urls and how you access a value from a json you've retrieved.
 
+&nbsp;
+
 
 # Discord Logs <a name="discordlogs"></a>
 
@@ -335,6 +343,8 @@ def logs(message, error=False):
     except:
         pass
 ```
+
+&nbsp;
 
 
 # Discord Trading Bot <a name="discordtradingbot"></a>
@@ -477,8 +487,11 @@ client.run(ORDER_BOT_TOKEN)
 
 That same bot that received the payload will sent intermediary messages to the discord channel to **inform the user about the progression** and result : order posted with success or error.
 
+&nbsp;
+___
 
-# Links <a name="links"></a>
+
+# Links and Addresses <a name="linksaddresses"></a>
 
 * TradingView :
 
@@ -493,3 +506,19 @@ https://ftx.com/#a=26368756 and you receive a 5,00 % fee discount on all your tr
 https://accounts.binance.com/en/register?ref=MJB86NYU to save 10% comission fee.
 
 https://www.binance.com/en/futures/ref/154947021 for binance future and to also save 10%.
+
+&nbsp;
+
+If it was interesting and you've learned something feel free to support me by sending any amount of cryptos to one of the following addresses :)
+
+* Ethereum, Matic Mainet and BSC : *0xa1eF4B0eA4f2a45Dc60baba368BDB8656B6fD580*
+
+* Solana : *2c1F4Rs63nL1VCuLP7Qz776X1NemfNUfYjMWTALQzrwh*
+
+* Bitcoin : *3DXrC7ZXxYa4bFbjL3ofgWxfeeiAzzHWf4*
+
+
+&nbsp;
+
+
+**Thank you for reading all the way through !**
