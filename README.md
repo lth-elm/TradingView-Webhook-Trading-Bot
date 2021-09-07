@@ -268,6 +268,8 @@ Now under '*ORDER FUNCTION*' are written the 3 method class for **entering**, **
 
 The structure is essentially all the same for the three, we define with variables the **action** (buy or sell), what **quantity** (size), at what **price**, where to place the **tp** and **sl** and we regroup them all in a different dictionnary payloads. Depending on the request we need to specify or not somes values so you need to check what is expected for a specific request in the documention.
 
+The position size is calculated as follow so that every losing trade doesn't cost you more than *X*% of what you are willing to risk from your total amount : ```size = (free_collateral * self.risk) / abs(payload['price'] - stop_loss)```. Here the total amount available is *free_collateral*, *risk* was automatically converted from % to %/100 and *stop_loss* is a price value not a difference.
+
 *Ok let's suppose that our bot is about to enter in a position, for safety it will first place the stop loss and this is how we code that :*
 
 ```python
