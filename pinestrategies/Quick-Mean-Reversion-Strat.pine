@@ -30,6 +30,10 @@ tp_close = input(title="► TPx close (%)", type=input.float, defval=15)
 
 atr = atr(atr_bars)
 
+plot(tp_close, title="TP Close", display=display.none)
+plot(tp1_mult, title="TP1 Mult", display=display.none)
+plot(tp2_mult, title="TP2 Mult", display=display.none)
+
 
 // ----- CONDITIONS -----
 
@@ -103,33 +107,36 @@ if not notInTrade[1] and goShort[1]
     strategy.exit("exit", "short", qty_percent = 100, profit = ticksConversion(short_tp), loss = ticksConversion(short_sl), alert_message="exit")
 
 // Exit or breakeven
+longbreakstop = strategy.position_avg_price + 2 * (strategy.position_avg_price*0.001)
+shortbreakstop = strategy.position_avg_price - 2 * (strategy.position_avg_price*0.001)
+
 if inLongPosition
     if close > ema // or we can keep our atr multiplicator first objective
         strategy.close("long", alert_message="exit")
     breakeven_level = strategy.position_avg_price + long_tp1 // change if breakeven tpx
     if high > breakeven_level
-        breakstop = strategy.position_avg_price + 2 * (strategy.position_avg_price*0.001)
-        strategy.exit("exit", "long", qty_percent = 100, stop=breakstop, limit=long_profit_level, alert_message="exit")
-        strategy.exit("tp2", "long", qty_percent = tp_close, stop=breakstop, profit = ticksConversion(long_tp2), alert_message="tp2")
+        strategy.exit("exit", "long", qty_percent = 100, stop=longbreakstop, limit=long_profit_level, alert_message="exit")
+        strategy.exit("tp2", "long", qty_percent = tp_close, stop=longbreakstop, profit = ticksConversion(long_tp2), alert_message="tp2")
 if inShortPosition
     if close < ema // or we can keep our atr multiplicator first objective
         strategy.close("short", alert_message="exit")
     breakeven_level = strategy.position_avg_price - short_tp1 // change if breakeven tpx
     if low < breakeven_level
-        breakstop = strategy.position_avg_price - 2 * (strategy.position_avg_price*0.001)
-        strategy.exit("exit", "short", qty_percent = 100, stop=breakstop, limit=short_profit_level, alert_message="exit")
-        strategy.exit("tp2", "short", qty_percent = tp_close, stop=breakstop, profit = ticksConversion(short_tp2), alert_message="tp2")
+        strategy.exit("exit", "short", qty_percent = 100, stop=shortbreakstop, limit=short_profit_level, alert_message="exit")
+        strategy.exit("tp2", "short", qty_percent = tp_close, stop=shortbreakstop, profit = ticksConversion(short_tp2), alert_message="tp2")
 
 
 // ----- Plot TP/SL -----
 
+plot(longbreakstop, color=color.yellow, title="Long Breakeven", display=display.none)
+plot(shortbreakstop, color=color.yellow, title="Short Breakeven", display=display.none)
 
 invisible = color.new(color.white, 100)
 p_price = plot(strategy.position_avg_price, color=invisible)
-p_long_stop = plot(strategy.position_size <= 0 ? na : long_stop_level, color=invisible, style=plot.style_linebr, linewidth=1)
-p_long_profit = plot(strategy.position_size <= 0 ? na : long_profit_level, color=invisible, style=plot.style_linebr, linewidth=1)
-p_short_stop = plot(strategy.position_size >= 0 ? na : short_stop_level, color=invisible, style=plot.style_linebr, linewidth=1)
-p_short_profit = plot(strategy.position_size >= 0 ? na : short_profit_level, color=invisible, style=plot.style_linebr, linewidth=1)
+p_long_stop = plot(strategy.position_size <= 0 ? na : long_stop_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Long SL")
+p_long_profit = plot(strategy.position_size <= 0 ? na : long_profit_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Long TP")
+p_short_stop = plot(strategy.position_size >= 0 ? na : short_stop_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Short SL")
+p_short_profit = plot(strategy.position_size >= 0 ? na : short_profit_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Short TP")
 
 fill(p_long_stop, p_price, color = inLongPosition ? color.red : na)
 fill(p_long_profit, p_price, color = inLongPosition ? color.green : na)
