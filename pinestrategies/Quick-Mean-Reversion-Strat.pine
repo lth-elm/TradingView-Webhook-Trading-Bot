@@ -133,10 +133,10 @@ plot(shortbreakstop, color=color.yellow, title="Short Breakeven", display=displa
 
 invisible = color.new(color.white, 100)
 p_price = plot(strategy.position_avg_price, color=invisible)
-p_long_stop = plot(strategy.position_size <= 0 ? na : long_stop_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Long SL")
-p_long_profit = plot(strategy.position_size <= 0 ? na : long_profit_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Long TP")
-p_short_stop = plot(strategy.position_size >= 0 ? na : short_stop_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Short SL")
-p_short_profit = plot(strategy.position_size >= 0 ? na : short_profit_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Short TP")
+p_long_stop = plot(long_stop_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Long SL")
+p_long_profit = plot(long_profit_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Long TP")
+p_short_stop = plot(short_stop_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Short SL")
+p_short_profit = plot(short_profit_level, color=invisible, style=plot.style_linebr, linewidth=1, title="Short TP")
 
 fill(p_long_stop, p_price, color = inLongPosition ? color.red : na)
 fill(p_long_profit, p_price, color = inLongPosition ? color.green : na)
