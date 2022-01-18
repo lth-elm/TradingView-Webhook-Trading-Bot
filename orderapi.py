@@ -1,6 +1,7 @@
 import logbot
 import json, os, config
 from ftxapi import Ftx
+from bybitapi import ByBit
 
 subaccount_name = 'SUBACCOUNT_NAME'
 leverage = 1.0
@@ -36,20 +37,20 @@ def global_var(payload):
         api_secret_heroku = os.environ.get('API_SECRET_TESTING')
         api_secret = api_secret_heroku if api_secret_heroku != None else config.API_SECRET_TESTING
 
-    elif subaccount_name == 'STRATEGY_TWO':
-        leverage_heroku = os.environ.get('LEVERAGE_STRATEGY_TWO')
-        leverage = leverage_heroku if leverage_heroku != None else config.LEVERAGE_STRATEGY_TWO
+    elif subaccount_name == 'MYBYBITACCOUNT':
+        leverage_heroku = os.environ.get('LEVERAGE_MYBYBITACCOUNT')
+        leverage = leverage_heroku if leverage_heroku != None else config.LEVERAGE_MYBYBITACCOUNT
         leverage = float(leverage)
 
-        risk_heroku = os.environ.get('RISK_STRATEGY_TWO')
-        risk = risk_heroku if risk_heroku != None else config.RISK_STRATEGY_TWO
+        risk_heroku = os.environ.get('RISK_MYBYBITACCOUNT')
+        risk = risk_heroku if risk_heroku != None else config.RISK_MYBYBITACCOUNT
         risk = float(risk) / 100
 
-        api_key_heroku = os.environ.get('API_KEY_STRATEGY_TWO')
-        api_key = api_key_heroku if api_key_heroku != None else config.API_KEY_STRATEGY_TWO
+        api_key_heroku = os.environ.get('API_KEY_MYBYBITACCOUNT')
+        api_key = api_key_heroku if api_key_heroku != None else config.API_KEY_MYBYBITACCOUNT
 
-        api_secret_heroku = os.environ.get('API_SECRET_STRATEGY_TWO')
-        api_secret = api_secret_heroku if api_secret_heroku != None else config.API_SECRET_STRATEGY_TWO
+        api_secret_heroku = os.environ.get('API_SECRET_MYBYBITACCOUNT')
+        api_secret = api_secret_heroku if api_secret_heroku != None else config.API_SECRET_MYBYBITACCOUNT
 
     else:
         logbot.logs(">>> /!\ Subaccount name not found", True)
@@ -84,13 +85,15 @@ def order(payload: dict):
     #   SET EXCHANGE CLASS
     exchange_api = None
     try:
-        if exchange == 'FTX':
+        if exchange.upper() == 'FTX':
             exchange_api = Ftx(init_var)
+        elif exchange.upper() == 'BYBIT':
+            exchange_api = ByBit(init_var)
     except Exception as e:
         logbot.logs('>>> /!\ An exception occured : {}'.format(e), True)
         return {
             "success": False,
-            "error": str(e)[1:-1]
+            "error": str(e)
         }
 
     logbot.logs('>>> Exchange : {}'.format(exchange))
@@ -98,16 +101,19 @@ def order(payload: dict):
 
     #   FIND THE APPROPRIATE TICKER IN DICTIONNARY
     ticker = ""
-    with open('tickers.json') as json_file:
-        tickers = json.load(json_file)
-        try:
-            ticker = tickers[exchange.lower()][payload['ticker']]
-        except Exception as e:
-            logbot.logs('>>> /!\ An exception occured : {}'.format(e), True)
-            return {
-                "success": False,
-                "error": str(e)[1:-1]
-            }
+    if exchange.upper() == 'BYBIT':
+        ticker = payload['ticker']
+    else:
+        with open('tickers.json') as json_file:
+            tickers = json.load(json_file)
+            try:
+                ticker = tickers[exchange.lower()][payload['ticker']]
+            except Exception as e:
+                logbot.logs('>>> /!\ An exception occured : {}'.format(e), True)
+                return {
+                    "success": False,
+                    "error": str(e)
+                }
     logbot.logs(">>> Ticker '{}' found".format(ticker))
 
     #   ALERT MESSAGE CONDITIONS

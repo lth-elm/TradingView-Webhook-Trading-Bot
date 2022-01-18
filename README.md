@@ -25,7 +25,7 @@ Also, if you ever notice something that can be improved or corrected or even add
 
 # Presentation <a name="presentation"></a>
 
-**A Flask app receiving alerts from TradingView and automatically sends a POST order to an integrated exchange API such as FTX (Binance and ByBit to come). Can also deliver the alert and the chart to discord where you can decide whether or not to take that trade through a Discord bot.**
+**A Flask app receiving alerts from TradingView and automatically sends a POST order to an integrated exchange API such as FTX and ByBit (Binance to come). Can also deliver the alert and the chart to discord where you can decide whether or not to take that trade through a Discord bot.**
 
 In order to build that app I relied on two great videos to get started, implementing and deploying basics stuff, I then enhanced it all for my own use. This one from Part Time Larry https://www.youtube.com/watch?v=XPTb3adEQEE (his [github](https://github.com/hackingthemarkets)) and this one for the discord bot from freeCodeCamp.org : https://www.youtube.com/watch?v=SPTfmiYiuok.
 
