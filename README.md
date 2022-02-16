@@ -128,8 +128,7 @@ from flask import request
 Then we will need to compare the stored password with the one we received. So beforehand let's fetch it.
 
 ```python
-webhook_passphrase_heroku = os.environ.get('WEBHOOK_PASSPHRASE')
-webhook_passphrase = webhook_passphrase_heroku if webhook_passphrase_heroku != None else config.WEBHOOK_PASSPHRASE
+webhook_passphrase = os.environ.get('WEBHOOK_PASSPHRASE', config.WEBHOOK_PASSPHRASE)
 ```
 
 The main password is saved with the Heroku environment variables so we will try to get this one first, however if you are deploying the app locally it won't find it so you will need to write it in the [config.py](config.py) file, otherwise just set it to *None*.
@@ -168,8 +167,7 @@ import os, config
 
 subaccount_name = payload['subaccount']
 if subaccount_name == 'Testing':
-    risk_heroku = os.environ.get('RISK_TESTING')
-    risk = risk_heroku if risk_heroku != None else config.RISK_TESTING
+    risk = os.environ.get('RISK_TESTING', config.RISK_TESTING)
     risk = float(risk) / 100
     # ...
 elif subaccount_name == 'STRATEGY_TWO':
