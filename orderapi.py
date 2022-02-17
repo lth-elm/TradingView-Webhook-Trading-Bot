@@ -23,34 +23,26 @@ def global_var(payload):
     subaccount_name = payload['subaccount']
 
     if subaccount_name == 'Testing':
-        leverage_heroku = os.environ.get('LEVERAGE_TESTING')
-        leverage = leverage_heroku if leverage_heroku != None else config.LEVERAGE_TESTING
+        leverage = os.environ.get('LEVERAGE_TESTING', config.LEVERAGE_TESTING)
         leverage = float(leverage)
 
-        risk_heroku = os.environ.get('RISK_TESTING')
-        risk = risk_heroku if risk_heroku != None else config.RISK_TESTING
+        risk = os.environ.get('RISK_TESTING', config.RISK_TESTING)
         risk = float(risk) / 100
 
-        api_key_heroku = os.environ.get('API_KEY_TESTING')
-        api_key = api_key_heroku if api_key_heroku != None else config.API_KEY_TESTING
+        api_key = os.environ.get('API_KEY_TESTING', config.API_KEY_TESTING)
 
-        api_secret_heroku = os.environ.get('API_SECRET_TESTING')
-        api_secret = api_secret_heroku if api_secret_heroku != None else config.API_SECRET_TESTING
+        api_secret = os.environ.get('API_SECRET_TESTING', config.API_SECRET_TESTING)
 
     elif subaccount_name == 'MYBYBITACCOUNT':
-        leverage_heroku = os.environ.get('LEVERAGE_MYBYBITACCOUNT')
-        leverage = leverage_heroku if leverage_heroku != None else config.LEVERAGE_MYBYBITACCOUNT
+        leverage = os.environ.get('LEVERAGE_MYBYBITACCOUNT', config.LEVERAGE_MYBYBITACCOUNT)
         leverage = float(leverage)
 
-        risk_heroku = os.environ.get('RISK_MYBYBITACCOUNT')
-        risk = risk_heroku if risk_heroku != None else config.RISK_MYBYBITACCOUNT
+        risk = os.environ.get('RISK_MYBYBITACCOUNT', config.RISK_MYBYBITACCOUNT)
         risk = float(risk) / 100
 
-        api_key_heroku = os.environ.get('API_KEY_MYBYBITACCOUNT')
-        api_key = api_key_heroku if api_key_heroku != None else config.API_KEY_MYBYBITACCOUNT
+        api_key = os.environ.get('API_KEY_MYBYBITACCOUNT', config.API_KEY_MYBYBITACCOUNT)
 
-        api_secret_heroku = os.environ.get('API_SECRET_MYBYBITACCOUNT')
-        api_secret = api_secret_heroku if api_secret_heroku != None else config.API_SECRET_MYBYBITACCOUNT
+        api_secret = os.environ.get('API_SECRET_MYBYBITACCOUNT', config.API_SECRET_MYBYBITACCOUNT)
 
     else:
         logbot.logs(">>> /!\ Subaccount name not found", True)
