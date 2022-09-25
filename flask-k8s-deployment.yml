@@ -1,19 +1,35 @@
-apiVersion: apps/v1
 kind: Deployment
+apiVersion: apps/v1
 metadata:
-  name: trading-bot
+  name: tradingview-webhook-trading-bot
+  namespace: trading
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: trading-bot
+      app.kubernetes.io/instance: tradingview-webhook-trading-bot
+      app.kubernetes.io/name: tradingview-webhook-trading-bot
   template:
     metadata:
+      creationTimestamp: null
       labels:
-        app: trading-bot
+        app.kubernetes.io/instance: tradingview-webhook-trading-bot
+        app.kubernetes.io/name: tradingview-webhook-trading-bot
+      annotations:
     spec:
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: trading-bot-config
       containers:
         - name: trading-bot
-          image: docker.io/mvthul/tradingview-webhook-trading-bot
-          imagePullPolicy: IfNotPresent
+          image: >-
+            docker.io/mvthul/tradingview-webhook-trading-bot
           ports:
-            - containerPort: 5000
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /flask_k8s
+
