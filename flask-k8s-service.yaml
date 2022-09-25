@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: trading-bot
+  namespace: trading
+  spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5000
+      targetPort: http
+  type: ClusterIP

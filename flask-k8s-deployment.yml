@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-bot
+spec:
+  selector:
+    matchLabels:
+      app: trading-bot
+  template:
+    metadata:
+      labels:
+        app: trading-bot
+    spec:
+      containers:
+        - name: trading-bot
+          image: docker.io/mvthul/tradingview-webhook-trading-bot
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
