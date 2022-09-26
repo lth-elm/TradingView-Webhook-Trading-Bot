@@ -31,7 +31,7 @@ def tradingview_webhook():
             "success": False,
             "message": "invalid passphrase"
         }
-
+    
     orders = order(data)
     print(orders)
     return orders
