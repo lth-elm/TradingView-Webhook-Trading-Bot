@@ -1,0 +1,36 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: tradingview-webhook-trading-bot
+  namespace: trading
+spec:
+  selector:
+    matchLabels:
+      app: tradingview-webhook-trading-bot
+  template:
+    metadata:
+      labels:
+        app: tradingview-webhook-trading-bot
+    spec:
+      initContainers:
+       - name: copy
+         image: mvthul/tradingview-webhook-trading-bot
+         command: ["/bin/sh", "-c", "cp -R /flask_k8s/* /config/"]
+         volumeMounts:
+         - name: config
+           mountPath: /config/
+      containers:
+        - name: tradingview-webhook-trading-bot
+          image: >-
+            mvthul/tradingview-webhook-trading-bot
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /flask_k8s
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: trading-bot-config

@@ -9,7 +9,7 @@ app = Flask(__name__)
 def hello_trader():
     return "<p>Hello young trader!</p>"
 
-@app.route("/tradingview-to-webhook-order", methods=['POST'])
+@app.route("/webhook", methods=['POST'])
 def tradingview_webhook():
 
     logbot.logs("========= STRATEGY =========")
@@ -36,7 +36,7 @@ def tradingview_webhook():
     print(orders)
     return orders
 
-@app.route("/tradingview-to-discord-study", methods=['POST'])
+@app.route("/discord", methods=['POST'])
 def discord_study_tv():
 
     logbot.logs("========== STUDY ==========")
