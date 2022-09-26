@@ -4,7 +4,6 @@ from pybit import HTTP
 class ByBit:
     def __init__(self, var: dict):
         self.ENDPOINT = 'https://api-testnet.bybit.com'
-
         self.subaccount_name = var['subaccount_name']
         self.leverage = var['leverage']
         self.risk = var['risk']
@@ -81,6 +80,7 @@ class ByBit:
 
     def entry_position(self, payload: dict, ticker):
         #   PLACE ORDER
+
         orders = []
 
         side = 'Buy'
@@ -93,6 +93,18 @@ class ByBit:
             close_sl_tp_side = 'Buy'
             stop_loss = payload['short SL']
             take_profit = payload['short TP']
+
+        if 'testnet' in payload.keys():
+            testnet = payload['testnet'] # 'True' or 'False'
+            testnet = testnet.capitalize()           
+        else:
+            testnet = False
+
+        if testnet == 'True':
+            self.ENDPOINT = 'https://api-testnet.bybit.com'
+        else:
+            self.ENDPOINT = 'https://api.bybit.com'
+        
         
         r = self._try_request('query_symbol')
         r = r['result']

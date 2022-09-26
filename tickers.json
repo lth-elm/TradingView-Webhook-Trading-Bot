@@ -3,6 +3,7 @@
         "BTCPERP": "BTC-PERP",
         "ETHPERP": "ETH-PERP",
         "FTTPERP": "FTT-PERP",
-        "BNBPERP": "BNB-PERP"
+        "BNBPERP": "BNB-PERP",
+        "TESTPERP": "TEST-PERP"
     }
 }

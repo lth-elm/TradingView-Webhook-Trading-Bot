@@ -8,7 +8,7 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`trading.vthul-it.nl`)
+      match: Host(`trading.bot.com`)
       services:
         - name: tradingview-webhook-trading-bot
           port: 5000
