@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: trading-bot
+  name: tradingview-webhook-trading-bot
   namespace: trading
   spec:
   ports:
