@@ -13,12 +13,12 @@ spec:
         app: tradingview-webhook-trading-bot
     spec:
       initContainers:
-       - name: copy
+       - name: copy-items
          image: mvthul/tradingview-webhook-trading-bot
-         command: ["/bin/sh", "-c", "cp -R /flask_k8s/* /config/"]
+         command: ["/bin/sh", "-c", "cp -u -R /flask_k8s/* /tmp/"]
          volumeMounts:
          - name: config
-           mountPath: /config/
+           mountPath: /tmp
       containers:
         - name: tradingview-webhook-trading-bot
           image: >-

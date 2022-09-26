@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: tradingview-webhook-trading-bot
+  namespace: trading
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`trading.vthul-it.nl`)
+      services:
+        - name: tradingview-webhook-trading-bot
+          port: 5000
+  tls:
+    store:
+      name: default
