@@ -17,6 +17,9 @@ def tradingview_webhook():
     data = json.loads(request.data)
 
     webhook_passphrase = os.environ.get('WEBHOOK_PASSPHRASE', config.WEBHOOK_PASSPHRASE)
+    
+    # CHECK IF REFERRAL IS USED
+    
 
     if 'passphrase' not in data.keys():
         logbot.logs(">>> /!\ No passphrase entered", True)
@@ -71,3 +74,5 @@ def discord_study_tv():
     return {
         "success": True
     }
+if __name__ == '__main__' :
+    app.run()

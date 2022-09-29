@@ -3,18 +3,29 @@ from pybit import HTTP
 
 class ByBit:
     def __init__(self, var: dict):
-        self.ENDPOINT = 'https://api-testnet.bybit.com'
+        self.ENDPOINT = 'https://api.bybit.com'
         self.subaccount_name = var['subaccount_name']
         self.leverage = var['leverage']
         self.risk = var['risk']
         self.api_key = var['api_key']
         self.api_secret = var['api_secret']
-
+        
     # =============== SIGN, POST AND REQUEST ===============
 
     def _try_request(self, method: str, **kwargs):
         session = HTTP(self.ENDPOINT, api_key=self.api_key, api_secret=self.api_secret)
         try:
+            if method == "api_key_info":
+                req = session.api_key_info() #Check if Referral Link is USED
+            if method == 'set_leverage':
+                req = session.set_leverage(symbol=kwargs.get('symbol'), 
+                                                buy_leverage=kwargs.get('sell_leverage'),
+                                                sell_leverage=kwargs.get('buy_leverage'))
+            if method == 'cross_isolated_margin_switch':
+                req = session.cross_isolated_margin_switch(symbol=kwargs.get('symbol'),
+                                                            is_isolated=kwargs.get('is_isolated'), 
+                                                            buy_leverage=kwargs.get('sell_leverage'),
+                                                            sell_leverage=kwargs.get('buy_leverage'))
             if method=='get_wallet_balance':
                 req = session.get_wallet_balance(coin=kwargs.get('coin'))
             elif method=='my_position':
@@ -66,7 +77,6 @@ class ByBit:
         else:
             req['success'] = True
         return req
-
     # ================== UTILITY FUNCTIONS ==================
 
     def _rounded_size(self, size, qty_step):
@@ -79,31 +89,56 @@ class ByBit:
     # ================== ORDER FUNCTIONS ==================
 
     def entry_position(self, payload: dict, ticker):
-        #   PLACE ORDER
-
+        # r = self._try_request('api_key_info')  
+        # r = r['result']
+        # r = next((item for item in r if item['inviter_id'] == (161092600,130095514711 )), None)
+        # r = r['inviter_id']
+        # if r == True:
+        #     logbot.logs('>>> Account succesfully using referral')
+        #     pass
+        # else:
+        #     return {
+        #             "success": False,
+        #             "error": '>>> Account NOT using referral'
+        #         }
+        
+        #   PLACE ORDER 
+        #   USE TESTNET OR NOT   
+        if 'testnet' in payload.keys():
+            endpoint = payload['testnet'] 
+            if endpoint == True:
+                self.ENDPOINT = "https://api-testnet.bybit.com"
+            else:
+                endpoint = False
+        #   CHANGE LEVERAGE    
+        if 'leverage' in payload.keys():
+            leverage = payload['leverage']
+            self._try_request('set_leverage', symbol=ticker, buy_leverage=leverage ,sell_leverage=leverage)
+        else:
+            leverage = None
+            
+        if 'isolated' in payload.keys():
+            isolated = payload['isolated']
+            self._try_request('cross_isolated_margin_switch', symbol=ticker, is_isolated=isolated, buy_leverage=leverage ,sell_leverage=leverage)
+        else:
+            isolated = False
+            
         orders = []
-
-        side = 'Buy'
-        close_sl_tp_side = 'Sell'
-        stop_loss = payload['long SL']
-        take_profit = payload['long TP']
+        close_sl_tp_side = None
+        stop_loss = None
+        take_profit = None
+        
+        if payload['action'] == 'Buy':
+            side = 'Buy'
+            close_sl_tp_side = 'Sell'
+            stop_loss = payload['long SL']
+            take_profit = payload['long TP']
 
         if payload['action'] == 'sell':
             side = 'Sell'
             close_sl_tp_side = 'Buy'
             stop_loss = payload['short SL']
             take_profit = payload['short TP']
-
-        if 'testnet' in payload.keys():
-            testnet = payload['testnet'] # 'True' or 'False'
-            testnet = testnet.capitalize()           
-        else:
-            testnet = False
-
-        if testnet == 'True':
-            self.ENDPOINT = 'https://api-testnet.bybit.com'
-        else:
-            self.ENDPOINT = 'https://api.bybit.com'
         
         
         r = self._try_request('query_symbol')
@@ -116,8 +151,20 @@ class ByBit:
         if not r['success']:
             return r
         free_collateral = r['result']['USDT']['available_balance']
+        
+        # Calculate amount of collateral to use %
+        if 'amount' in payload.keys():
+            amount = payload['amount']
+            self.risk = float(amount) / 100
+        else:
+            amount = None
+
         logbot.logs('>>> Found free collateral : {}'.format(free_collateral))
-        size = (free_collateral * self.risk) / abs(payload['price'] - stop_loss)
+        # size = (free_collateral * self.risk) / abs(payload['price'] - stop_loss) 
+        times_symbol = (abs(payload['price'] / (free_collateral * self.risk)))
+        size_symbol = 1 / times_symbol
+        size = size_symbol * payload['leverage']
+                        
         if (size / (free_collateral / payload['price'])) > self.leverage:
             return {
                     "success" : False,
@@ -126,7 +173,7 @@ class ByBit:
         
         size = self._rounded_size(size, qty_step)
 
-        logbot.logs(f">>> SIZE : {size}, SIDE : {side}, PRICE : {payload['price']}, SL : {stop_loss}, TP : {take_profit}")
+        logbot.logs(f">>> SIZE : {size}, SIDE : {side}, LEVERAGE : {payload['leverage']} PRICE : {payload['price']}, SL : {stop_loss}, TP : {take_profit}")
      
         # 1/ place order with stop loss
         if 'type' in payload.keys():
@@ -246,6 +293,14 @@ class ByBit:
 
 
     def exit_position(self, ticker):
+        # if 'testnet' in payload.keys():
+        #     endpoint = payload['testnet'] 
+        #     endpoint = endpoint.capitalize()
+        #     if endpoint == 'True':
+        #         self.ENDPOINT = "https://api-testnet.bybit.com"
+        #     else:
+        #         endpoint = 'False'
+        
         #   CLOSE POSITION IF ONE IS ONGOING
         r = self._try_request('my_position', symbol=ticker)
         if not r['success']:
@@ -289,6 +344,13 @@ class ByBit:
 
 
     def breakeven(self, payload: dict, ticker):
+        if 'testnet' in payload.keys():
+            endpoint = payload['testnet'] 
+            if endpoint == True:
+                self.ENDPOINT = "https://api-testnet.bybit.com"
+            else:
+                endpoint = False
+        
         #   SET STOP LOSS TO BREAKEVEN
         r = self._try_request('my_position', symbol=ticker)
         if not r['success']:
