@@ -1,3 +1,9 @@
+# <h1 align="center"> Webhook TV Trading Bot 📈🤖 </h1>
+
+![](./README_images/AlgobotBanner.png)
+
+___
+
 1. [Presentation](#presentation)
 2. [TradingView](#tradingview)
     1. [Pinescript Strategy](#pinescriptstrategy)
